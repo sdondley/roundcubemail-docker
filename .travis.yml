@@ -1,33 +1,39 @@
-os: linux
-dist: trusty
+language: php
 
-services: docker
+dist: xenial
+sudo: false
 
-language: bash
+matrix:
+  fast_finish: true
+  include:
+    #- php: 5.5
+    #  dist: trusty
+    #- php: 5.6
+    #- php: 7.0
+    #  env: CODE_COVERAGE=1
+    #- php: 7.1
+    #- php: 7.2
+    #- php: 7.3
+    #  dist: bionic # for proper node-less version
+    #  env: BROWSER_TESTS=1
+    #  addons:
+    #    chrome: stable
+    #- php: 7.4
+    - php: 8.0
+      dist: bionic # for proper node-less version
+      env: BROWSER_TESTS=1
+      addons:
+        chrome: stable
 
-branches:
-  only:
-    - master
+cache:
+  directories:
+    - $HOME/.composer
 
-before_script:
-  - env | sort
-  - dir="${VARIANT}"
-  - echo "$DOCKER_PULL_PASSWORD" | docker login -u "$DOCKER_PULL_USERNAME" --password-stdin
+install:
+  - .ci/install.sh
 
 script:
-  - cd "$dir"
-  - docker-compose build
-  - docker images
-  - travis_retry docker-compose up -d && sleep 60
-  - docker-compose ps
-  - docker-compose logs
-  - docker-compose ps "roundcubedb" | grep "Up"
-  - docker-compose ps "roundcubemail" | grep "Up"
+  - .ci/run.sh
 
 notifications:
   email: false
-
-env:
-  - VERSION=1.4.11 VARIANT=apache
-  - VERSION=1.4.11 VARIANT=fpm
-  - VERSION=1.4.11 VARIANT=fpm-alpine
